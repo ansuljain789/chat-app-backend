@@ -58,6 +58,32 @@ const allMessages = asyncHandler(async (req, res) => {
     }
   });
 
+  const deleteMessage = asyncHandler(async(req,res)=>{
+    try {
+      const message = await Message.findById(req.params.messageId);
+  
+  
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+  
+      // Check if the user is the sender or an admin
+      if (message.sender.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Not authorized to delete this message" });
+      }
+  
+      await Message.findByIdAndDelete(req.params.messageId);
+      console.log("message delete sucesssfully");
+      
+  
+      res.json({ message: "Message deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+
+  })
 
 
-module.exports = {sendMessage,allMessages};
+
+
+module.exports = {sendMessage,allMessages,deleteMessage};
