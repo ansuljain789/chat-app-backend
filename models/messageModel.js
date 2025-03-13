@@ -18,6 +18,15 @@ const messageSchema = mongoose.Schema(
     readBy: [{
          type: mongoose.Schema.Types.ObjectId,
           ref: "User" }],
+
+          deletedFor: [{ 
+               type: mongoose.Schema.Types.ObjectId, 
+               ref: "User" 
+           }], // Users who deleted the message for themselves
+           isDeletedForEveryone: { 
+               type: Boolean, 
+               default: false 
+           }
   },
   { timestamps: true }
 );

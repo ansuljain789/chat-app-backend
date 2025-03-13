@@ -91,6 +91,10 @@ io.on( "connection",(socket) =>{
     });
   });
 
+
+  socket.on("deleteMessage", (messageId) => {
+    io.emit("messageDeleted", messageId); // Broadcast to all users
+  });
   socket.off("setup",() =>{
     console.log("USER DISCONNECTED");
     socket.leave(userData._id)

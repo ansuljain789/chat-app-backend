@@ -50,40 +50,120 @@ const allMessages = asyncHandler(async (req, res) => {
       const messages = await Message.find({ chat: req.params.chatId})
          .populate("sender", "name pic email")
          .populate("chat");
+
       res.json(messages);
-    // res.send(messages);
+    
+
+
+    
     } catch (error) {
       res.status(400);
       throw new Error(error.message);
     }
   });
 
-  const deleteMessage = asyncHandler(async(req,res)=>{
-    try {
-      const message = await Message.findById(req.params.messageId);
+  // const deleteMessage = asyncHandler(async(req,res)=>{
+  //   try {
+  //     const message = await Message.findById(req.params.messageId);
   
   
-      if (!message) {
-        return res.status(404).json({ message: "Message not found" });
-      }
+  //     if (!message) {
+  //       return res.status(404).json({ message: "Message not found" });
+  //     }
   
-      // Check if the user is the sender or an admin
-      if (message.sender.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: "Not authorized to delete this message" });
-      }
+  //     // Check if the user is the sender or an admin
+  //     if (message.sender.toString() !== req.user._id.toString()) {
+  //       return res.status(403).json({ message: "Not authorized to delete this message" });
+  //     }
   
-      await Message.findByIdAndDelete(req.params.messageId);
-      console.log("message delete sucesssfully");
+  //     await Message.findByIdAndDelete(req.params.messageId);
+  //     console.log("message delete sucesssfully");
       
   
-      res.json({ message: "Message deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+  //     res.json({ message: "Message deleted successfully" });
+  //   } catch (error) {
+  //     res.status(500).json({ message: error.message });
+  //   }
+
+  // })
+
+
+
+  const deleteMessageForMe = asyncHandler(async(req,res)=>{
+    try{
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
     }
 
+    // Add user to deletedFor array if not already present
+    if (!message.deletedFor.includes(userId)) {
+      message.deletedFor.push(userId);
+      await message.save();
+    }
+    console.log(message.content);
+    
+    return res.status(200).json({ message: "Message deleted for you only" });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+  })
+
+  const deleteMessageForEveryone = asyncHandler(async(req,res)=>{
+    try {
+      const { messageId } = req.params;
+      const userId = req.user._id;
+  
+      const message = await Message.findById(messageId);
+     
+      
+       
+      if (!message) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      
+
+      console.log(message.sender.toString());
+      
+      const isSender = message.sender.toString() === userId.toString();
+      console.log(isSender);
+      //  const isAdmin = req.user.role === "admin";
+     console.log(isSender);
+    
+     
+      if(message.content=="This message is deleted"){
+        console.log("already deleted");
+        return res.status(200).json({ message: "Message deleted already" });
+      }
+      if (isSender) {
+        message.isDeletedForEveryone = true;
+        console.log(message.content);
+        message.content = "This message is deleted"; // Soft delete
+        console.log(message.content);
+        
+        await message.save();
+  
+        return res.status(200).json({ message: "Message deleted for everyone" });
+      } else {
+        return res.status(403).json({ error: "Unauthorized to delete for everyone" });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal server error" });
+    }
   })
 
 
 
 
-module.exports = {sendMessage,allMessages,deleteMessage};
+
+
+
+
+module.exports = {sendMessage,allMessages,deleteMessageForMe,deleteMessageForEveryone};
