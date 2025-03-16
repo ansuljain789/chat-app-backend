@@ -26,6 +26,16 @@ const userSchema = mongoose.Schema(
       required: true,
       default: false,
     },
+    // Tracks if the user is suspended
+    isSuspended: {
+       type: Boolean, 
+       default: false 
+      },
+     // Stores the suspension end time
+    suspensionExpiresAt: { 
+      type: Date, 
+      default: null 
+    }, 
   },
   { timestamps: true }
 );

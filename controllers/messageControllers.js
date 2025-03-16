@@ -1,17 +1,79 @@
+require("dotenv").config();
+
 const asyncHandler = require('express-async-handler')
 const Chat = require('../models/chatModel');
 const Message = require('../models/messageModel');
 const User = require('../models/userModel');
 
 
+const abusiveWords = process.env.ABUSIVE_WORDS
+  ? process.env.ABUSIVE_WORDS.split(",").map(word => word.trim().toLowerCase())
+  : [];
+//  const abusiveWords = ["badword", "offensive", "curseword", "slur"];
+//  console.log("enter");
+
+//  console.log(abusiveWords);
+
+
 const sendMessage = asyncHandler(async(req,res) =>{
     const { content, chatId } = req.body;
+    console.log(content);
+    
 
     if (!content || !chatId) {
         console.log("Invalid data passed into request");
         return res.sendStatus(400);
       }
+       // Fetch the user details
+   const user = await User.findById(req.user._id);
+  
+   console.log(user);
 
+
+  const containsAbusiveWord = abusiveWords.some((word) =>
+    content.toLowerCase().includes(word)
+);
+
+
+  console.log(containsAbusiveWord);
+  console.log("entering for chcking the abusive");
+
+  
+  //check for abusive word
+   if(containsAbusiveWord){
+
+    console.log("content is");
+    console.log(content);
+    
+    console.log("Abusive content detected:", content);
+    
+    user.isSuspended = true;
+    user.suspensionExpiresAt = new Date(Date.now() + 60* 1000); // 2 sec
+    await user.save();
+    console.log("You have been suspended from messaging for 2 hours due to inappropriate content.");
+    console.log(user);
+    console.log(user.suspensionExpiresAt);
+    console.log(`You are suspended from sending messages until ${user.suspensionExpiresAt}`);
+    
+    return res.status(403).json({
+           message: "You have been suspended from messaging for 1 hours due to inappropriate content.",  
+              
+         });
+   }
+  if (user.isSuspended && user.suspensionExpiresAt > new Date()) {
+    console.log("You are suspended from sending messages until ${user.suspensionExpiresAt}");
+    
+    return res.status(403).json({
+     
+    });
+  }
+
+  //if suspension time passsed 
+  if (user.suspensionExpiresAt && user.suspensionExpiresAt < new Date()) {
+    user.isSuspended = false;
+    user.suspensionExpiresAt = null;
+    await user.save();
+  }
       var newMessage = {
         sender: req.user._id,
         content: content,
