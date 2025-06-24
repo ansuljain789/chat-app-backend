@@ -35,7 +35,10 @@ const userSchema = mongoose.Schema(
     suspensionExpiresAt: { 
       type: Date, 
       default: null 
-    }, 
+    },
+   otp: { type: String },
+  otpExpiry: { type: Date },
+
   },
   { timestamps: true }
 );

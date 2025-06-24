@@ -15,6 +15,14 @@ const messageSchema = mongoose.Schema(
          type: mongoose.Schema.Types.ObjectId,
           ref: "Chat"
          },
+         file: {
+      type: String
+        },
+    fileType: {
+      type: String,
+      enum: ["image", "video", ""],
+      default: ""
+    },
     readBy: [{
          type: mongoose.Schema.Types.ObjectId,
           ref: "User" }],

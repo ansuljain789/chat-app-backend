@@ -8,8 +8,9 @@ const {notFound,errorHandler} = require('./middleware/errorMiddleware')
 const messageRoutes = require('./Routes/messageRoutes')
 const reminderRoutes = require("./Routes/reminderRoutes");
 const checkReminders = require("./utils/reminderScheduler");
-
+const authRoutes = require("./Routes/authRoutes")
 const connectDB = require('./config/db');
+const path = require("path");
 require('dotenv').config();
 connectDB();
 
@@ -39,6 +40,8 @@ app.use('/api/user',userRoutes);
 app.use('/api/chat',chatRoutes);
 app.use('/api/message',messageRoutes)
 app.use("/api/reminders", reminderRoutes);
+app.use('/api/auth', authRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 checkReminders();
 
 app.use(notFound);

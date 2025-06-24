@@ -16,11 +16,25 @@ const abusiveWords = process.env.ABUSIVE_WORDS
 
 
 const sendMessage = asyncHandler(async(req,res) =>{
-    const { content, chatId } = req.body;
-    console.log(content);
+  
+    
+     
+    // console.log(req.body);
+    //   console.log(file);
+
+
+const file = req.file;
+const { content, chatId } = req.body;
+
+console.log("🔥 Multer middleware is working");
+console.log("content:", content);
+console.log("chatId:", chatId);
+console.log("file:", file);
+
+
     
 
-    if (!content || !chatId) {
+    if ((!content &&!file) || !chatId) {
         console.log("Invalid data passed into request");
         return res.sendStatus(400);
       }
@@ -29,16 +43,14 @@ const sendMessage = asyncHandler(async(req,res) =>{
   
    console.log(user);
 
-
+ if(content){
   const containsAbusiveWord = abusiveWords.some((word) =>
     content.toLowerCase().includes(word)
 );
 
-
   console.log(containsAbusiveWord);
   console.log("entering for chcking the abusive");
 
-  
   //check for abusive word
    if(containsAbusiveWord){
 
@@ -74,11 +86,19 @@ const sendMessage = asyncHandler(async(req,res) =>{
     user.suspensionExpiresAt = null;
     await user.save();
   }
+
+}
       var newMessage = {
         sender: req.user._id,
-        content: content,
+        content: content || "",
         chat: chatId,
       };
+
+        if(file){
+          const fileType = file.mimetype.startsWith("image") ? "image" : "video";
+          newMessage.file = `/uploads/${file.filename}`;
+          newMessage.fileType = fileType;
+        }
 
       try {
         var message = await Message.create(newMessage);
@@ -123,33 +143,6 @@ const allMessages = asyncHandler(async (req, res) => {
       throw new Error(error.message);
     }
   });
-
-  // const deleteMessage = asyncHandler(async(req,res)=>{
-  //   try {
-  //     const message = await Message.findById(req.params.messageId);
-  
-  
-  //     if (!message) {
-  //       return res.status(404).json({ message: "Message not found" });
-  //     }
-  
-  //     // Check if the user is the sender or an admin
-  //     if (message.sender.toString() !== req.user._id.toString()) {
-  //       return res.status(403).json({ message: "Not authorized to delete this message" });
-  //     }
-  
-  //     await Message.findByIdAndDelete(req.params.messageId);
-  //     console.log("message delete sucesssfully");
-      
-  
-  //     res.json({ message: "Message deleted successfully" });
-  //   } catch (error) {
-  //     res.status(500).json({ message: error.message });
-  //   }
-
-  // })
-
-
 
   const deleteMessageForMe = asyncHandler(async(req,res)=>{
     try{
@@ -220,10 +213,6 @@ const allMessages = asyncHandler(async (req, res) => {
       res.status(500).json({ error: "Internal server error" });
     }
   })
-
-
-
-
 
 
 
